@@ -1,0 +1,194 @@
+*{
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+body{
+	margin: 0;
+	padding: 0;
+	font-family: "neue-montreal"; 
+	background: #4E4E4E;
+}
+@font-face {
+	font-family: "neue-montreal"; 
+	src: url("../fonts/neue-montreal/NeueMontreal-Regular.otf") format("truetype"); 
+	font-style: normal; 
+	font-weight: normal; 
+	font-display: swap;
+}
+.slider_section{
+	width: 100%;
+	height: 100vh;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	overflow: hidden;
+	
+}
+.slider_section .control_cont{
+	width: 100%;
+	display: flex;
+	justify-content: space-between;
+	padding: 2vw 4.5vw;
+	user-select: none;
+}
+.slider_section .control_cont .arrow_cont{
+	width: 3.3vw;
+	color: #fff;
+	cursor: pointer;
+}
+.slider_section .control_cont .arrow_cont p{
+	font-size: .8vw;
+	margin-bottom: .3vw;
+	text-transform: uppercase;
+}
+.slider_section .control_cont .arrow_cont img{
+	width: 100%;
+	transition: .2s;
+}
+.slider_section .control_cont .arrow_cont.prev{
+	text-align: right;
+}
+.slider_section .control_cont .arrow_cont.next img{
+	transform: rotate(180deg);
+}
+.slider_section .control_cont .arrow_cont:hover img{
+	transform: translateX(-20%);
+}
+.slider_section .control_cont .arrow_cont.next:hover img{
+	transform: rotate(180deg) translateX(-20%);
+}
+.slider_section .control_cont .dots{
+	width: 83vw;
+	padding-bottom: .5vw;
+	display: flex;
+	justify-content: space-between;
+}
+.slider_section .control_cont .dots span{
+	width: 100%;
+	height: 100%;
+	margin: 0 .2vw;
+	display: flex;
+	align-items: flex-end;
+	cursor: pointer;
+}
+.slider_section .control_cont .dots span::before{
+	content: '';
+	display: block;
+	width: 100%;
+	height: 3px;
+	background: #686868;
+	transition: .2s;
+}
+.slider_section .control_cont .dots span.active::before{
+	background: #A0A0A0;
+	transform: scaleY(180%);
+}
+.slider_section .control_cont .dots span:hover::before{
+	background: #fff;
+}
+.slider_section .slides{
+	width: 100%;
+	height: 100%;
+	display: flex;
+	justify-content: center;
+	position: relative;
+}
+.slider_section .slides .slide_track{
+	position: absolute;
+	height: 100%;
+	display: flex;
+	align-items: flex-end;
+}
+.slider_section .slides .slide{
+	width: 13vw;
+	margin: 0 .5vw;
+	position: relative;
+	cursor: pointer;
+	
+}
+.slider_section .slides .slide.center_slide{
+	width: 33vw;
+}
+.slider_section .slides .slide .logo{
+	width: 100%;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	object-fit: cover;
+	transition: inherit;
+	z-index: -1;
+}
+.slider_section .slides .slide.center_slide .logo{
+	opacity: 0;
+	height: 100%;
+}
+.slider_section .slides .slide .active_content{
+	width: 100%;
+	transition: inherit;
+	opacity: 0;
+	background: #EAEAEA;
+	
+}
+.slider_section .slides .slide.center_slide .active_content{
+	opacity: 1;
+}
+.slider_section .slides .slide .active_content .info{
+	padding: 1.8vw 2.6vw;
+	transition: inherit;
+}
+.slider_section .slides .slide .active_content .info p{
+	font-size: .5vw;
+	height: 0;
+	color: #4E4E4E;
+	line-height: 1;
+	margin: 0;
+	transition: inherit;
+}
+.slider_section .slides .slide.center_slide .active_content .info p{
+	height: 20vw;
+	font-size: 1.8vw;
+	margin: 1vw 0;
+}
+
+.slider_section .slides .slide .active_content .info a{
+	font-size: 1.1vw;
+	color: #A0A0A0;
+	text-decoration: none;
+}
+.slider_section .slides .slide .active_content .img{
+	width: 100%;
+	display: block;
+}
+@media (max-width: 767px) {
+	.slider_section .slides .slide.center_slide{
+		width: 65vw;
+	}
+	.slider_section .slides .slide{
+		width: 39vw;
+		margin: 0 2.5vw;
+	}
+	.slider_section .slides .slide.center_slide .active_content .info{
+		padding: 5vw;
+	}
+	.slider_section .slides .slide.center_slide .active_content .info p{
+		font-size: 5.2vw;
+		height: 70vw;
+	}
+	.slider_section .slides .slide .active_content .info a{
+		font-size: 4vw;
+	}
+	.slider_section .control_cont .arrow_cont{
+		width: 13vw;
+	}
+	.slider_section .control_cont{
+		padding: 7.8vw 5vw ;
+	}
+	.slider_section .control_cont .dots{
+		width: 55vw;
+		padding-bottom: 1.5vw;
+	}
+	.slider_section .control_cont .arrow_cont p{
+		font-size: 3.5vw;
+	}
+}
