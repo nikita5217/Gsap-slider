@@ -7,13 +7,12 @@ let allowActions = true
 let mouseFollow = false
 let currentSlide = Math.round(slides.length/2)-1
 let sliderLength = slides.length
-
-
-
+let sliderInterval
+let centerSlide
+let centerSlideCorrection = 0
 let slideTransition = .5 //sliding transition
 
 let autoSlideSpeed = 5 //auto sliding speed, if set as 'false' stops auto sliding
-
 
 
 for (let i = 0; i < slides.length; i++) {
@@ -25,21 +24,17 @@ let slideWidth = parseFloat(getComputedStyle(slides[0]).width)
 let slideMargin = parseFloat(getComputedStyle(slides[0]).marginLeft) + parseFloat(getComputedStyle(slides[0]).marginRight)
 
 
-const updateSlides = () => slides = slideTrack.querySelectorAll('.slide')
+const updateSlides = () => {
+    slides = slideTrack.querySelectorAll('.slide')
+    
+}
 
 //slide clonnig functions
 
 const cloneSlide = (index, prepend = false, before) => {
     const clone = slides[index].cloneNode(true)
-    if(prepend){
-        slideTrack.prepend(clone)
-    }else if(before){
-        slideTrack.insertBefore(clone, slides[before])
-    }else{
-        slideTrack.appendChild(clone)
-    }
+    prepend ? slideTrack.prepend(clone) : before ?  slideTrack.insertBefore(clone, slides[before]) : slideTrack.appendChild(clone)
     updateSlides()
-    
 }
 
 const initClones = () => {
@@ -56,11 +51,7 @@ const initDots = () => {
         if (i > 1 && i < slides.length - 2) {
         const dot = document.createElement('span')
         dot.setAttribute('dot-index', i - 2)
-        dot.addEventListener('click', () => {
-            allowActions = false
-            certainSlide(i-2)
-           
-        })
+        dot.addEventListener('click', () => certainSlide(i-2))
         sliderDotsCont.appendChild(dot)
         }
     })
@@ -80,13 +71,15 @@ prevArrow.addEventListener('click', () => prevSlide(0))
 
 
 
-//drag & drop logic
+// drag & drop logic
 
 let startX = 0
 let currentX = 0
 let isDragging = false
+let allowClick = true
 
 const handleMouseDown = (e) => {
+    allowClick = false
     startX = e.pageX
     isDragging = true
     slideTrack.style.transition = 'none'
@@ -103,24 +96,27 @@ const handleMouseMove = (e) => {
 const handleMouseUp = (e) => {
     if (!isDragging) return
     isDragging = false
-    allowActions = true
     const deltaX = e.pageX - startX
-
-
+    
     if (Math.abs(deltaX) > slideWidth * 0.5) {
+        allowActions = true
         if (deltaX < 0) {
             nextSlide(deltaX)
         } else {
             prevSlide(deltaX)
         }
+    }else if(Math.abs(deltaX) < 5){
+        allowClick = true
     } else {
         gsap.to(slideTrack, 
             {duration: slideTransition,
             x: 0,
-            ease: "power2.out"
+            ease: "power2.out",
+            onComplete: ()=> setTimeout(() => allowActions = true, slideTransition*1000)
         });
     }
 }
+
 slideTrack.addEventListener('touchstart', (e) => {
     startX = e.touches[0].pageX
     isDragging = true
@@ -141,13 +137,23 @@ slideTrack.addEventListener('touchend', (e) => {
 const handleMouseLeave = (e) => {
     if (isDragging) handleMouseUp(e)
 }
+slideTrack.addEventListener('mousedown', handleMouseDown)
+document.addEventListener('mousemove', handleMouseMove)
+document.addEventListener('mouseup', handleMouseUp)
+slideTrack.addEventListener('mouseleave', handleMouseLeave)
 
 
-const initDragAndDrop = () => {
-    slideTrack.addEventListener('mousedown', handleMouseDown)
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
-    slideTrack.addEventListener('mouseleave', handleMouseLeave)
+
+
+// slide click logic 
+
+const updateSlideClickListeners = () => {    
+    slides.forEach((slide, index) => {
+        let clickedSlide = currentSlide + (index - ((centerSlide+centerSlideCorrection)-1))
+        slide.onclick = () => {
+            if (allowClick) certainSlide(clickedSlide)
+        }
+    })
 }
 
 
@@ -161,30 +167,28 @@ const nextSlide = (from) =>{
         if(currentSlide >= sliderLength){
             currentSlide = 0
         }
-
         gsap.fromTo(slideTrack,
             { x: from }, {
             duration: slideTransition,
             x: -slideWidth-slideMargin,
-            ease: "power2.out"
-        })
-
-        centerSlideInit()
-        dotChange()
-        gsap.set(slideTrack, { clearProps: 'all' });
-        setTimeout(() => {
-        gsap.to(slideTrack, {
-            duration: 0,
-            x: 0,
-            onComplete: () => {
-                cloneSlide(2)
-                slides[2].remove()
-                updateSlides()
-                cloneChange()
-                setTimeout(() => allowActions = true, 500);
+            ease: "power2.out",
+            onComplete: () =>{
+                gsap.to(slideTrack, {
+                    duration: 0,
+                    x: 0,
+                    onComplete: () => {
+                        cloneSlide(2)
+                        slides[2].remove()
+                        updateSlides()
+                        cloneChange()
+                        setTimeout(() => allowActions = true, slideTransition*1000);
+                    }
+                })
             }
         })
-        }, (slideTransition * 1000) + 10);
+        centerSlideInit()
+        dotChange()
+        gsap.set(slideTrack, { clearProps: 'all' })
     }
 }
 
@@ -202,25 +206,24 @@ const prevSlide = (from) =>{
             { x: from }, {
             duration: slideTransition,
             x: slideWidth+slideMargin,
-            ease: "power2.out"
+            ease: "power2.out",
+            onComplete: () => {
+                gsap.to(slideTrack, {
+                    duration: 0,
+                    x: 0,
+                    onComplete: () => {
+                        cloneSlide(slides.length - 3, false, 2)
+                        slides[slides.length - 3].remove()
+                        updateSlides()
+                        cloneChange()
+                        setTimeout(() => allowActions = true, slideTransition*1000)
+                    }
+                })
+            }
         })
-        centerSlideInit(true)
+        centerSlideInit(2)
         dotChange()
-        
         gsap.set(slideTrack, { clearProps: 'all' });
-        setTimeout(() => {
-            gsap.to(slideTrack, {
-                duration: 0,
-                x: 0,
-                onComplete: () => {
-                    cloneSlide(slides.length - 3, false, 2)
-                    slides[slides.length - 3].remove()
-                    updateSlides()
-                    cloneChange()
-                    setTimeout(() => allowActions = true, 500);
-                }
-            })
-        }, (slideTransition * 1000) + 10);
     }
 }
 
@@ -228,13 +231,10 @@ const prevSlide = (from) =>{
 
 
 const dotChange = () =>{
-    const dotCount = sliderDotsCont.children.length
     for (let i = 0; i < sliderDotsCont.children.length; i++) {
         sliderDotsCont.children[i].classList.remove('active')
     }
-    if (sliderDotsCont.children[currentSlide]) {
-        sliderDotsCont.children[currentSlide].classList.add('active')
-    }
+    if (sliderDotsCont.children[currentSlide]) sliderDotsCont.children[currentSlide].classList.add('active')
 }
 
 const cloneChange = () =>{
@@ -243,13 +243,17 @@ const cloneChange = () =>{
     slides[1].remove()
     slides[slides.length - 1].remove()
     slides[slides.length - 2].remove()
+
     updateSlides()
 
     cloneSlide(slides.length - 1, true)
     cloneSlide(slides.length - 2, true)
     cloneSlide(2)
     cloneSlide(3)
+
     updateSlides()
+    updateSlideClickListeners()
+    resetInterval()
 }
 
 
@@ -257,14 +261,14 @@ const cloneChange = () =>{
 
 
 const certainSlide = (slideTo) =>{
-
-    let slideGap = slideTo - currentSlide
-    slideChange(slideGap)
-    currentSlide = slideTo
-    setTimeout(() => centerSlideInit(false, true), 20);
-    setTimeout(() => allowActions = true, (slideTransition*1000)+10);
-    
-    dotChange()
+    if(allowActions){
+        allowActions = false
+        let slideGap = slideTo - currentSlide
+        slideTo >= sliderLength ? currentSlide = slideTo - sliderLength  : slideTo < 0 ? currentSlide = sliderLength + (slideTo) : currentSlide = slideTo
+        slideChange(slideGap)
+        centerSlideInit(1)
+        dotChange()
+    }
 }
 
 const slideChange = (slideGap) =>{
@@ -288,12 +292,14 @@ const slideChange = (slideGap) =>{
             cloneChange()
         }
     }   
+    
 
     if (slideGap != 0)  for (let i = 0; i < slides.length; i++) slides[i].classList.remove('center_slide')
 
     gsap.to(slideTrack, {
         duration: slideTransition,
-        x: 0
+        x: 0,
+        onComplete: ()=> setTimeout(() => allowActions = true, slideTransition*1000)
     })
 }
 
@@ -301,20 +307,29 @@ const slideChange = (slideGap) =>{
 
 //initiating of center slide 
 
-const centerSlideInit = (prev = false, current = false) =>{
+const centerSlideInit = (correction = 0) =>{
     for (let i = 0; i < slides.length; i++) {
        slides[i].classList.remove('center_slide')
     }
-    prev ? slides[(Math.round(slides.length/2))-2].classList.add('center_slide'): current ? slides[(Math.round(slides.length/2))-1].classList.add('center_slide') : slides[Math.round(slides.length/2)].classList.add('center_slide')
+    centerSlideCorrection = correction
+    centerSlide = (Math.ceil(slides.length/2)) - correction
+    slides[centerSlide].classList.add('center_slide')
+    
 }
 
 //auto sliding function
 
-if (autoSlideSpeed){ setInterval(() => {allowActions ? nextSlide(0) : ''} , (slideTransition + autoSlideSpeed) * 1000)}
+const startInterval = () => {if(autoSlideSpeed){sliderInterval = setInterval(() => {allowActions ? nextSlide(0) : ''}, (slideTransition + autoSlideSpeed) * 1000)}}
 
+const resetInterval = () =>{
+    clearInterval(sliderInterval)
+    startInterval()
+}
 
-window.addEventListener('resize', () => setTimeout(updateDimensions, 500))
-initDragAndDrop()
+window.addEventListener('resize', () => setTimeout(updateDimensions, slideTransition*1000))
+
+startInterval()
 initClones()
 initDots()
+updateSlideClickListeners()
 nextSlide(0)
